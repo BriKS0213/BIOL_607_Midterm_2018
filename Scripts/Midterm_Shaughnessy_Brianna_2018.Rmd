@@ -1,0 +1,540 @@
+---
+title: "Biol607 Midterm Exam 2018"
+author: "Brianna Shaughnessy"
+date: "10/29/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+library(readr)
+library(broom)
+library(dplyr)
+library(purrr)
+library(broom)
+library(bbmle)
+library(MASS)
+library(profileModel)
+library(brms)
+library(bayesplot)
+library(tidybayes)
+library(shinystan)
+library(qqtest)
+library(wesanderson)
+```
+
+#1) Sampling Your System (10 points)
+*Each of you has a study system you work in and a question of interest. Give an example of one variable that you would sample in order to get a sense of its variation in nature. Describe, in detail, how you would sample for the population of that variable in order to understand its distribution. Questions to consider include, but are not limited to: Just what is your sample versus your population? What would your sampling design be? Why would you design it that particular way? What are potential confounding influences of both sampling technique and sample design that you need to be careful to avoid? What statistical distribution might the variable take, and why?*
+
+**THE QUESTION:**  
+Can water quality predict concentration of inorganic arsenic in commercial Sugar Kelps (*Saccharina latissima*) in Massachusetts?  
+**Variable (X)** = Inorganic arsenic  
+**Effect/Treatment (Y)** = Water Quality (concentration of inorganic arsenic. Could also look at lead, iodine, etc.)   
+**Sample vs. Population:**  
+	Sample = Tissue and water samples of commercially harvested Sugar Kelp from MA farmers  
+	Population = All commercial kelps, natural kelps, and oceanic water conditions.  
+**Sample Design:**  
+In order to quantify the extent to which water quality can predict concentration of inorganic arsenic/toxic heavy metals in commercially harvested kelps, I would collect water and kelp tissue samples from experimental and commercial kelp farms in Massachusetts. Observations would be limited to the kelp growing season and at the 4 geographically seperated sites where kelps are currently harvested. I would eventually like to determine distance parameters for growing kelps (how far is far enough from an industrial outfall/plant/etc?), but have chosen initially to focus on active Sugar Kelp farms in Massachusetts. These farms are not necessarily abundant but require immediate research into food hazards (such as inorganic arsenic and heavy metals) as the industry tries to expand and create markets.
+
+Kelp farms would be visited throughout the growing season. It would be great if I could get access to existing water quality data to determine how many times/month would be appropriate for sampling but, from what I have researched, there exists little-no accessible arsenic data in water quality assessments in Massachusetts. Tissue samples would be taken along horizontal longlines (the current method for farming Sugar Kelp in Massachusetts). In order to avoid the effect of natural variation in nutrient concentrations in the water column and at sites, water samples would be taken from the same depth and location in the water column as each tissue sample.  A quick power analysis could help identify an appropriate sample size for analysis, but it would be important to randomize sampling along the horizontal lines. Samples would then be analysed using HPLC and ICP-MS technology for separating organic and inorganic arsenic species. A ratio of concentration of arsenic in the water vs. growing and harvested kelp tissue could then be identified. Site-level variables like month, time of day, temperature, and current would also be measured to investigate potential covariates. 
+
+**Why is it a good design?**  
+For one, it is important when identifying a question to set boundaries. Too broad of a question can complicate results and misdirect research. For this reason, I chose to focus only on currently running commercial kelp farms due to heavy interest from the Division of Marine Fisheries and kelp industry hopefuls. However, this same experiment could be applied to further investigate the interactions of water quality and heavy metal uptake by looking at natural kelp beds or kelp farms in other regions like Maine. This design would hopefully educate an eventual Bayesian-style analysis that could be used in projecting areas of “good” water quality for commercial kelp farming and development. An a-priori idea of the ratio of water concentration vs. tissue uptake could be very useful in future analyses like these. Including covariates, random sampling, and site-level variation would help the design be as inclusive as possible and ensure the conclusions from the results be appropriately educated. 
+
+**What are potential confounding influences of both sampling technique and sample design that you need to be careful to avoid?**  
+- Potential research biases such as site selection (luckily there are only a few sites in MA, so we could potentially just do all of them)  
+- Samples would not represent entire kelp communities. For one, they are grown in a different part of the water column than naturally occurring individuals. Second, they are at permitted sites for aquaculture that rely on specific water quality standards for permitting.   
+- The gradient along a longline could have variations in all variables. In this way, it is important to sample along entire longlines and farms. 
+
+**What statistical distribution might the variable take, and why?**  
+This experiment would essentially represent a longitudinal study with a treatment of water quality across multiple longlines and sites. We are investigating the variation in arsenic concentration (X) based on the condition of water quality (Y). I believe the data would take a normal distribution given that the effect should be the same/similar across sampling locations. However, random variability in oceanic conditions and methodological variability in farming techniques need to be considered if a model is to be constructed. A linear mixed effect model might make sense for this data, allowing for each site and sample to respond differently.
+
+#2) Let's Get Philosophical (10 points)
+*Are you a frequentist, likelihoodist, or Bayesian? Why? Include in your answer why you prefer the inferential tools (e.g. confidence intervals, test statistics, posterior probabilities, etc.) of your chosen worldview and why you do not like the ones of the other one. This includes defining just what those different tools mean! extra credit for citing and discussing outside sources - one point per source/point*
+
+Throughout my academic career I have almost exclusively been taught methods in frequentist hypothesis testing and have used them widely in my research. For my master’s research, I used these tests and their inferential tools (95% Confidence Intervals, reporting p-values, and standard errors) to investigate food preferences of isopods. As I learn more about Bayesian approaches, I can feel a shift in my plans for dissertation research. This shift towards Bayesian methods, specifically for projecting development of seaweed in aquaculture, is rooted in the concept that frequentist parameter estimation restricts the flexibility of our conclusions. As ecologists pointed out in 1996, it does not allow for proper analysis of inherently dynamic, changeable study systems (Ellison 1996).
+
+First, I believe it is important to recognize that each of these statistical methods should be considered, and can be used in tandem with each other, depending on the analysis being conducted. For example, frequentist tests such as T-tests and f-tests are valuable in determining things like repeatability of results. When a justification for why specific analyses were conducted is provided, it is certainly possible to draw valid conclusions from likelihood and frequentist tests (Wasserstein, 2016). However, I do agree with modern critiques of frequentist methods. It is essential, especially in ecological statistics, to consider that in the “real-world” there is no fixed value for any ecologically meaningful statistical parameter (Ellison 1996). Even if there were to be a true fixed value, likelihood and frequentist methods can only hope to determine a 95% Confidence Interval for that value. As Wasserstein and the American Statistical Association pointed out, historical methods for statistics have unfortunately led to cherry-picking findings or “p-hacking” in many cases in the search for statistically significant results (Wasserstein 2016). 
+
+Bayesian methods are commonly used, and celebrated, in my realm of ecology. As industries search for alternative sources of protein to feed an ever-growing human population, aquaculture is at the forefront of sustainable technological advancement in food production. Modern-day ecologists are increasingly expected to estimate the magnitude of ecological responses of ecosystems to anthropogenic stressors (Ellison 1996). Development in aquaculture is not just expected to investigate these responses, but also to examine projected environmental impacts and implement strategies for avoiding harmful activity where possible (Ellison 1996). As new and integral methods for sustainably expanding the aquaculture industry arise, cooperation across many sectors is key. This often includes stakeholders with competing or misaligned goals for coastal development. In my study system, discontentment commonly arises as one public policy (created to safegaurd an activity like offshore aquaculture) can limit another, such as small-scale fishing activities (Ramos 2017). Frequentist parameter estimation does not allow for flexibility in these inherently dynamic systems (Ellison 1996). Using a Bayesian approach (Bayesian Belief Networks), policymakers are able to query multiple scenarios and project which one has the highest probability of maximizing efficiency while also minimizing discontentment amongst stakeholders (Ramos 2017). This is an important aspect of in a modern push to include humans as members of an “ecosystem” rather than outsiders. Bayes’ theorem allows one to synthesize prior information (priors) and observations into posterior likelihoods, a complete solution to the inverse problem of ecology described by Dowd and Mayer in 2003. 
+
+In this way, I hope to use Bayesian methods to combine spatially explicit environmental and socio-economic data to project where user conflicts are or might emerge. This information, provided to decisionmakers, can consider several potential management scenarios prior to landing on one for implementation (Coccoli et. al. 2018). For example, one group in Spain combined fisheries and environmental data with expert judgement to produce a model of suitable fishing areas depended on specific gear uses (Coccoli et. al. 2018), allowing projected impacts reports to educate management. Such results are valuable tools for recommending strategies for coastal planners and decision-makers to deal with the interaction between competing sectors in efficient and sustainable ways.  
+**Sources**  
+(1) Coccoli, C., et al. 2018. Conflict analysis and reallocation opportunities in the framework of marine spatial planning: A novel, spatially explicit Bayesian belief network approach for artisanal fishing and aquaculture. Marine Policy. 94: 119-131.  
+(2) Dowd, M. and Meyer, R. 2003. A Bayesian approach to the ecosystem inverse problem. Ecological Modelling. 168: 39-55.  
+(3) Ellison, A.M. 1996. An introduction to Bayesian Inference for ecological research and environmental decision-making. Ecological Applications 6(4) 1036-1046.  
+(4) Ramos, J.R. et al. 2017. Stakeholders’ conceptualization of offshore aquaculture and small-scale fisheries interactions using a Bayesian approach. Ocean and Coastal Management 138: 70-82.  
+(5) Wasserstein, R.L. and Lazar, N.A. 2016. The ASA’s statement on p-values: context, process, and purpose. The American Statistician. 70(2): 129-133. 
+
+#3) Power (20 Points)  
+*We have a lot of aspects of the sample of data that we collect which can alter the power of our linear regressions.*  
+**Slope**  
+**Intercept**  
+Residual variance  
+**Sample Size**  
+Range of X values  
+Choose three of the above properties and demonstrate how they alter power of an F-test from a linear regression using at least three different alpha levels (more if you want!) As a baseline of the parameters, let’s use the information from the seal data:  
+slope = 0.00237, intercept = 115.767, sigma = 5.6805, range of seal ages = 958 to 8353, or, if you prefer, seal ages ∼ N(3730.246, 1293.485). Your call what distribution to use for seal age simulation.
+
+```{r Question 3 Data}
+#### Create Simulation with provided parameters ####
+# List parameters
+simulation <- data.frame(intercept = c(100, 115, 130),
+                         slope = 0.00237) %>%
+  crossing(residual_sd = 3:10) %>%
+  crossing(sample_size = 3:15) %>%
+# Set up sampling
+  group_by(intercept, slope, residual_sd, sample_size) %>%
+    expand(reps = 1:sample_size) %>%
+  ungroup() %>%
+#Replicate each set for 100 simulations
+  crossing(sim = 1:100) %>%
+#Use predictors
+  mutate(age.days = runif(n(), 958, 8353)) %>%
+#Use the model to populate
+  mutate(length.cm = rnorm(n(), intercept + slope * age.days, residual_sd)) %>%
+  ungroup()
+
+#### Fit Models ####
+
+fit <- simulation %>%
+# Group 
+  group_by(sim, slope, intercept, sample_size, residual_sd) %>%
+  nest() %>%
+# Fit the model to this data
+  mutate(model = purrr::map(data, ~lm(length.cm~age.days, data = .))) %>%
+# Extract coefficients and p values to clean up
+  mutate(coefs = purrr::map(model, ~tidy(.))) %>%
+  unnest(coefs) %>%
+  ungroup() %>%
+  filter(term == "age.days")
+```
+
+```{r Power and Intercept}
+#Intercept
+p_intercept <- fit %>%
+  crossing(alpha = c(0.01, 0.05, 0.001)) %>%
+#Group by parameters that vary
+  group_by(intercept, alpha) %>%
+#Calculate type II error rate
+  mutate(type_2 = sum(p.value>alpha)/n())%>%
+  ungroup() %>%
+#Calculate power
+  mutate(power = 1 - type_2)
+
+#Plot It
+ggplot(data = p_intercept,
+       mapping = aes(x = intercept, y = power,
+                     color = factor(alpha))) +
+  geom_point() +
+  geom_line() +
+  scale_color_manual(values = wes_palette("Darjeeling1")) +
+  theme_dark()
+```
+**Intercept** Our graph shows that intercept does not have an effect on power (as shown by the straight horizontal lines where as alpha is relaxed power increases...which we expect). This is because it does not necessarily matter where the interaction starts. It is where it goes (or doesn't go) afterwards that matters (aka slope). In this way, intercept is not a question of power. 
+
+```{r Power and Sample Size}
+#Sample Size
+sample_power <- fit %>%
+  crossing(alpha = c(0.01, 0.05, 0.001)) %>%
+#Group by parameters that vary
+  group_by(sample_size, alpha) %>%
+#Calculate type II error
+  mutate(type_2 = sum(p.value > alpha)/n()) %>%
+  ungroup() %>%
+#Calculate Power
+  mutate(power = 1 - type_2)
+#Plot it
+ggplot(data = sample_power, mapping = aes(x = sample_size, y = power,
+                                          color = factor(alpha))) +
+  geom_point() +
+  geom_line() +
+  scale_color_manual(values = wes_palette("Darjeeling1")) +
+  theme_dark()
+```
+
+**Sample Size** our graph shows that as sample size increases and alpha is relaxed, so does our power. This is expected because in a linear regression, the more data that we collect our understanding of "treatment" effect becomes more precise. In other words, our understanding of the relationship between variables X and Y is more precise.
+ 
+```{r Power and Slope}
+#New dataframe with varying slopes
+simulation2 <- data.frame(intercept = c(100, 115, 130),
+                         slope3 = c(0.001, 0.00237, 0.005)) %>%
+  crossing(residual_sd = 3:10) %>%
+  crossing(sample_size = 3:15) %>%
+# Set up sampling
+  group_by(intercept, slope3, residual_sd, sample_size) %>%
+    expand(reps = 1:sample_size) %>%
+  ungroup() %>%
+#Replicate each set for 100 simulations
+  crossing(sim = 1:100) %>%
+#Use predictors
+  mutate(age.days = runif(n(), 958, 8353)) %>%
+#Use the model to populate
+  mutate(length.cm = rnorm(n(), intercept + slope3 * age.days, residual_sd)) %>%
+  ungroup()
+
+#### Fit Models ####
+
+fit <- simulation2 %>%
+# Group 
+  group_by(sim, slope3, intercept, sample_size, residual_sd) %>%
+  nest() %>%
+# Fit the model to this data
+  mutate(model = purrr::map(data, ~lm(length.cm~age.days, data = .))) %>%
+# Extract coefficients and p values to clean up
+  mutate(coefs = purrr::map(model, ~tidy(.))) %>%
+  unnest(coefs) %>%
+  ungroup() %>%
+  filter(term == "age.days")
+
+#Look at how it varies
+slope_power <- fit %>%
+  crossing(alpha = c(0.01, 0.05, 0.001)) %>%
+#Group by the parameter that varies
+  group_by(slope3, alpha) %>%
+#Calculate type II error
+  mutate(type_2 = sum(p.value > alpha)/n()) %>%
+  ungroup()%>%
+#Calculate the power
+  mutate(power = 1 - type_2)
+
+#Plot It
+ggplot(data = slope_power, mapping = aes(x = slope3,
+                                         y = power,
+                                         color = factor(alpha))) +
+  geom_point() +
+  geom_line() +
+  scale_color_manual(values = wes_palette("Darjeeling1")) +
+  theme_dark()
+```
+
+**Slope** Our graph shows that as slope increases and alpha is relaxed, our power increases. This is expected because we can think of slope as a "rate of change" in our dependent variable in relation to our dependent variable. When there is a strong interaction between variables we will see a larger slope and see a clear, strong, rate of change. 
+
+#4) Bayes Theorem
+*I’ve referenced the following figure a few times. I’d like you to demonstrate your understanding of Bayes Theorem by hand showing what the probability of the sun exploding is given the data. Assume that your prior probability that the sun explodes is p(Sun Explodes) = 0.0001. The rest of the information you need is in the cartoon!*
+
+```{r}
+#Bayesian equation:
+
+#We are looking for the probability that the sun explodes given the data. We need to figure out the probability that the sun will explode AND the machine will tell ther truth. The data we have is that the machine says yes and that the probability of the sun exploding is 0.0001. Thus the way I see it:
+
+#P(Sun Explodes | Machine Says Yes) = P(S|Y)
+#P(S|Y) = P(Y|S) * P(S)/P(Y) 
+#P(Y|S) = the probability that the machine is telling the truth
+#P(Y|S) = 35/36 = 0.9722
+#P(S) = the probability that the sun will explode
+#P(S) = 0.0001
+#P(Y) = P(Y|S) * P(S) + P(Y | Doesn't Explode) * P(Not Exploding)
+#P(Y | Doesn't Explode) = Probability the machine is lying 
+#P(Y | Doesn't Explode) = 1/36 = 0.027 
+#P(Not Exploding) = 1 - P(S)
+#P(Not Exploding) = 1-0.0001 = 0.999 
+#P(Y) = (0.97222 * 0.0001) + (0.027 * 0.999)
+P_Y <- 0.97222*0.0001+0.027*0.999
+#P(Y) = 0.0271
+#P(S|Y) = 0.97222 * (0.0001/0.0271)
+P_SY <- 0.97222 * (0.0001/0.0271)
+```
+The probability that the sun exploded is very low (0.0036), even though the machine indicated that the sun exploded. See code for breakdown of variables.
+
+#5) Quialing at the Prospect of Linear Models
+*I’d like us to walk through the three different ‘engines’ that we have learned about to fit linear models. To motivate this, we’ll look at Burness et al.’s 2012 study "Post-hatch heat warms adult beaks: irreversible physiological plasticity in Japanese quail" http://rspb.royalsocietypublishing.org/content/280/1767/20131436.short the data for which they have made available at Data Dryad at http://datadryad.org/resource/doi:10.5061/dryad.gs661. We’ll be looking at the morphology data.*
+
+```{r Data for Question 5, echo = FALSE, include = FALSE}
+Morphology <- read.csv("../Data/Morphology data.csv")
+#Look at the data
+head(Morphology)
+#Rename difficult column names
+Morphology <- rename(Morphology, Tarsus = `Tarsus..mm.`, Culmen = `Culmen..mm.`)
+#There are NAs and certain columns that we will not be using so I will restructure the data to omit unneeded columns. 
+Morphology <- Morphology[-c(2:5, 8:10)] %>%
+  drop_na(Culmen)
+```
+
+##5.1 Three Fits (10 Points)
+*To begin with, I’d like you to fit the relationship that describes how Tarsus (leg) length predicts upper beak (Culmen) length. Fit this relationship using least squares, likelihood, and Bayesian techniques. For each fit, demonstrate that the necessary assumptions have been met. Note, functions used to fit with likelihood and Bayes may or may not behave well when fed NAs. So look out for those errors.*
+
+###Least Squares Workflow
+```{r Least Squares Method}
+####Fit the Model####
+Morph_lm <- lm(Culmen ~ Tarsus, data = Morphology)
+####Test Assumptions####
+#Q-Q plot isn't too bad...
+plot(Morph_lm, which = 2)
+#Cooks distance looks like there might be outliers
+plot(Morph_lm, which = 4)
+#Distribution of residuals - doesn't look terrible. Normal distribution
+residual_Morph <- residuals(Morph_lm)
+hist(residual_Morph)
+####Query our Model####
+F_Test <- anova(Morph_lm)
+Summary <- summary(Morph_lm)
+tidy(F_Test)
+tidy(Summary)
+####Visualize####
+#First the scatter
+Morph_scatter <- ggplot(data = Morphology, 
+                        mapping = aes(x = Tarsus,
+                                      y = Culmen)) +
+  geom_point()
+#Add the regression line
+Morph_scatter + 
+  stat_smooth(method = lm, formula = y~x)
+```
+
+###Likelihood Workflow
+
+```{r Likelihood Method}
+####Look at the Data####
+#determine if lm is appropriate - looks good
+morph_plot <- ggplot(data = Morphology, aes(x = Tarsus, y = Culmen)) +
+  geom_point()
+morph_plot
+####Fit the Model####
+morph_mod <- glm(Culmen ~ Tarsus,
+                 family = gaussian(link = "identity"),
+                 data = Morphology)
+####Test the Assumptions####
+morph_fit <- predict(morph_mod)
+morph_res <- residuals(morph_mod)
+    #Plot them
+qplot(morph_fit, morph_res)
+qqnorm(morph_res)
+qqline(morph_res)
+
+####Likelihood Ratio Test of Model####
+#To Test against null - there is a significant difference so we can conclude that our model is showing some interaction
+morph_mod_null <- glm(Culmen ~ 1,
+                      family = gaussian(link = "identity"),
+                      data = Morphology)
+
+anova(morph_mod_null, morph_mod, test = "LRT")
+#T-test for parameters
+summary(morph_mod)
+####Visualization####
+ggplot(Morphology,
+       mapping = aes(x = `Tarsus`, y = `Culmen`)) +
+  geom_point() +
+  stat_smooth(method = "glm", method.args = list(family = gaussian(link = "identity")))
+```
+
+###Bayesian Workflow
+
+```{r Bayesian Method, echo = FALSE, include = FALSE}
+####Look at the data####
+morph_plot <- ggplot(data = Morphology, aes(x = Tarsus, y = Culmen)) +
+  geom_point()
+morph_plot
+#Fit the Model with no given priors
+morph_brms <- brm(Culmen ~ Tarsus,
+                        data = Morphology,
+                        family = gaussian(link = "identity"))
+####Test Bayesian Assumptions####
+#Inspect Convergence and Posterior Behavior
+plot(morph_brms)
+#Inspect rhat
+mcmc_rhat(rhat(morph_brms))
+#Inspect Autocorrelation
+mcmc_acf(as.data.frame(morph_brms))
+#Model Assumptions
+morph_fit <- predict(morph_brms) %>% as_tibble
+morph_res <- residuals(morph_brms) %>% as_tibble
+
+qplot(morph_fit$Estimate, morph_res$Estimate)
+#Fit - Do the simulated posteriors of the data fit our observations?
+pp_check(morph_brms, type = "scatter")
+#Normality
+qqnorm(morph_res$Estimate)
+qqline(morph_res$Estimate)
+#Does the distribution of the sample estimates match distribution of simulation estimates?
+pp_check(morph_brms, type="error_hist", bins= 8)
+#Does the distribution of Error match the distribution of simulated error?
+pp_check(morph_brms, type="stat_2d", test=c("mean", "sd"))
+pp_check(morph_brms)
+#coefficients and Parameters
+summary(morph_brms, digits=5)
+posterior_interval(morph_brms)
+
+####Visualize####
+morph_chains <- as.data.frame(morph_brms)
+
+morph_plot +
+  geom_point() +
+  geom_abline(intercept=morph_chains[,1], slope = morph_chains[,2], alpha=0.1, color="lightgrey") +
+  geom_abline(intercept=fixef(morph_brms)[1], slope = fixef(morph_brms)[2], color="red")
+```
+
+##5.2 Three Interpretations (10 Points)
+*OK, now that we have fits, take a look! Do the coefficients and their associated measures of error in their estimation match? How would we interpret the results from these different analyses differently? Or would we? Note, confint works on lm objects as well.*
+
+```{r Summaries for Comparison}
+####Summary of 3 Fits for Comparison####
+#Least Squares
+knitr::kable(tidy(lm(Culmen ~ Tarsus, data = Morphology)), "html",
+             digits = 2)
+#Likelihood
+knitr::kable(tidy(glm(Culmen ~ Tarsus, data = Morphology)), "html",
+             digits = 2)
+#Bayes
+knitr::kable(tidy(morph_brms, intervals = TRUE), "html", digits = 2)
+```
+Our three types of analyses use different methods to investigate the same relationship between Tarsus (leg) length and Culmen (upper beak) length. 
+Least Squares is a frequentist approach with the goal of describing the probability of obtaining the relationship we see in our data. In this mindset we used our test statistics to reject the null hypothesis that Culmen length does not effect Tarsus length. The caveat to interpreting this kind of result is that our test provides us with a fixed value at which only Tarsus lengths at that size predict the Culmen length.
+
+Our Likelihood approach investigated the probability of obtaining the relationship that we see given our hypothesis. In this case we use the generated test statistics in a similar way to our Least Squares approach but Likelihood allows us to evaluate the weight of evidence of our different hypotheses and not just in rejection of our null hypothesis. This framework allows for more freedom in our predictions and probabilities because of the model type we worked in. This allows for our description of our relationship to not be fixed upon one prediction. 
+
+Using a Bayesian approach allows us to assert probabilities of our relationship in that it is not a fixed value of how the world works for this particular population, but rather assumes that our parameter values also have a range of possible true values with some probability distribution. In a Bayesian approach we use our prior knowledge of how the world of bird morphology works. Given a specific Tarsus length we can give a specific probability with varying levels of freedom that the Tarsus length will be X if Culmen length is Y. 
+
+For all three approaches our measurments of error and confidence are very similar (See above). The 95% CI (for Least Squares and Likelihood) and our 95% Credible Interval (for Bayesian) are very close in value. Our values of intercept, mean, and slope are also very similar. I would argue that the Least Squares and Likelihood estimates can be interpreted in a similar way because both are based on the use of p-values for significance. The Bayesian model is interpreted differently because it uses our actual data to generate its Credible Intervals and parameter estimates. 
+
+##5.3 Every Day I'm Profilin' (10 points)
+*For your likelihood fit, are your profiles well behaved? For just the slope, use grid sampling to create a profile. You’ll need to write functions for this, and use the results from your glm() fit to provide the reasonable bounds of what you should be profiling over (3SE should do). Is it well behaved? Plot the profile and give the 80% and 95% CI. Verify your results with profileModel.*
+
+```{r, echo = FALSE, include = FALSE}
+#Call the glm() to provide reasonable bounds
+summary(morph_mod)
+####Create Function####
+like_function <- function(slope, intercept, resid_sd) {
+  #Generate Data
+  cul_fit <- intercept + slope * Morphology$Tarsus
+  #Generate Likelihood
+  sum(dnorm(Morphology$Culmen, cul_fit, resid_sd, log = TRUE))
+}
+
+####Grid Sample with Function####
+morph_loglik <- crossing(intercept = seq(-0.5, 0.6, by = 0.05),
+                       slope = seq(0.2, 0.5, by = 0.01),
+                       resid_sd = seq(0.5, 1.5, 0.01)) %>%
+  rowwise() %>%
+  mutate(log_lik = like_function(slope, intercept, resid_sd)) %>%
+  ungroup()
+```
+
+```{r Find the MLE}
+#Find the MLE
+profile_slope <- morph_loglik %>%
+  group_by(slope) %>%
+  filter(log_lik == max(log_lik))
+#Profile - zoomed in after inspecting
+plot_profile <- ggplot(data = profile_slope, 
+                      aes(x = slope, y = log_lik)) +
+                      geom_line() +
+                      xlim(0.35, 0.39) +
+                      ylim(-1260, -1240)
+plot_profile
+
+#Get the 95% CI
+profile_slope %>%
+  filter(log_lik > max(log_lik) -1.96) %>%
+  arrange(slope) %>%
+  filter(row_number() == 1 | row_number() == n())
+#Get the 80% CI
+profile_slope %>%
+  filter(log_lik > max(log_lik) - 1.642/2) %>%
+  arrange(slope) %>%
+  filter(row_number() == 1 | row_number() == n())
+```
+
+```{r Plot Profiles and Find Confidence Intervals}
+#Plot the profile for slope with Confidence Intervals
+morph_slope_profile <- ggplot(data = profile_slope) +
+  geom_line(aes(x = slope, y = log_lik)) +
+  xlim(0.35, 0.39) +
+  ylim(-1260, -1240) +
+  geom_hline(yintercept = -1251.6, color = "orange") +
+  geom_hline(yintercept = -1250.4, color = "red") +
+  ylab("Log Likelihood") + xlab("Slope")
+morph_slope_profile
+
+#Compare to the GLM
+prof_glm <- profileModel(morph_mod, 
+                        objective = "ordinaryDeviance",
+                        quantile  = qchisq(0.8, 0.95))
+plot(prof_glm)
+#Converges around the same values!
+```
+
+
+##5.4 The Power of the Prior (10 Points)
+*This data set is pretty big. After excluding NAs in the variables we’re interested in, it’s over 766 lines of data! Now, a lot of data can overhwelm a strong prior. But only to a point. Show first that there is enough data here that a prior for the slope with an estimate of 0.4 and a sd of 0.01 is overwhelmed by the data by demonstrating that it produces similar results to our already fit flat prior. Second, see if a very small sample size (n = 10) would at least include 0.4 in it’s 95% Credible Interval. Last, demonstrate at what sample size that 95% CL first begins to include 0.4 when we have a strong prior. How much data do we really need to overcome our prior belief? Note, it takes a long time to fit these models, so, try a strategy of spacing out the 3-4 sample sizes, and then zoom in on an interesting region.*
+
+```{r Summary, echo = FALSE, include = FALSE}
+#Use priors in our model
+morph_prior <- brm(Culmen ~ Tarsus,
+                   data = Morphology,
+                   family = gaussian(),
+                 prior = c(prior(normal(0.4, 0.4), class = b),
+                           prior(normal(0.01, 0.01), class = sigma)))
+####Compare Results####
+posterior_interval(morph_brms)
+posterior_interval(morph_prior)
+
+morph_fit <- Morphology %>%
+  modelr::data_grid(Tarsus) %>%
+  add_fitted_draws(morph_brms)
+
+morph_fit_prior <- Morphology %>%
+  modelr::data_grid(Tarsus) %>%
+  add_fitted_draws(morph_prior)
+
+ggplot(morph_fit, aes(x = Tarsus, y = Culmen)) +
+  geom_point(data = Morphology) +
+  stat_lineribbon(aes(y = .value)) +
+  scale_fill_brewer(palette = "Greys") +
+  scale_color_brewer(palette = "Set2") +
+  stat_lineribbon(data = morph_fit_prior, color = "blue",
+                  mapping = aes(y = .value)) +
+  theme_bw(base_size = 17)
+#They are so close that they overlap eachother! To me this means it's validated.
+```
+
+```{r Sample Size of 10, echo = FALSE, include = FALSE}
+#Sample 10 points
+n_morph <- Morphology[1:10,]
+#Model those 10 points with priors
+n_10_morph <- brm(Culmen ~ Tarsus,
+                  data = n_morph,
+                  family = gaussian(),
+                    prior = c(prior(normal(0.4, 0.4), class = b),
+                           prior(normal(0.01, 0.01), class = sigma)))
+posterior_interval(n_10_morph)
+#sample size of 10 without priors does include 0.4. 
+```
+
+```{r Different Sample Sizes, echo = FALSE, include = FALSE}
+random_data_20 <- Morphology[1:20,]
+sample_size_20 <- brm(Culmen ~ Tarsus,
+                  data = random_data_20,
+                  family = gaussian(),
+                  prior = c(prior(normal(0.4, 0.4), class = b),
+                           prior(normal(0.01, 0.01), class = sigma)))
+posterior_interval(sample_size_20)
+
+random_data_100 <- Morphology[1:100,]
+sample_size_100 <-  brm(Culmen ~ Tarsus,
+                  data = random_data_100,
+                  family = gaussian(),
+                  prior = c(prior(normal(0.4, 0.4), class = b),
+                           prior(normal(0.01, 0.01), class = sigma)))
+posterior_interval(sample_size_100)
+
+random_data_200 <- Morphology[1:200,]
+sample_size_200 <-  brm(Culmen ~ Tarsus,
+                  data = random_data_200,
+                  family = gaussian(),
+                  prior = c(prior(normal(0.4, 0.4), class = b),
+                           prior(normal(0.01, 0.01), class = sigma)))
+posterior_interval(sample_size_200)
+
+
+random_data_250 <- Morphology[1:250,]
+sample_size_250 <- brm(Culmen ~ Tarsus,
+                       data = random_data_250,
+                       family = gaussian(),
+                       prior = c(prior(normal(0.4, 0.4), class = b),
+                       prior(normal(0.01, 0.01), class = sigma)))
+
+posterior_interval(sample_size_250)
+```
