@@ -133,6 +133,7 @@ ggplot(data = p_intercept,
   scale_color_manual(values = wes_palette("Darjeeling1")) +
   theme_dark()
 ```
+
 **Intercept** Our graph shows that intercept does not have an effect on power (as shown by the straight horizontal lines where as alpha is relaxed power increases...which we expect). This is because it does not necessarily matter where the interaction starts. It is where it goes (or doesn't go) afterwards that matters (aka slope). In this way, intercept is not a question of power. 
 
 ```{r Power and Sample Size}
@@ -237,6 +238,7 @@ P_Y <- 0.97222*0.0001+0.027*0.999
 #P(S|Y) = 0.97222 * (0.0001/0.0271)
 P_SY <- 0.97222 * (0.0001/0.0271)
 ```
+
 The probability that the sun exploded is very low (0.0036), even though the machine indicated that the sun exploded. See code for breakdown of variables.
 
 #5) Quialing at the Prospect of Linear Models
@@ -257,6 +259,7 @@ Morphology <- Morphology[-c(2:5, 8:10)] %>%
 *To begin with, I’d like you to fit the relationship that describes how Tarsus (leg) length predicts upper beak (Culmen) length. Fit this relationship using least squares, likelihood, and Bayesian techniques. For each fit, demonstrate that the necessary assumptions have been met. Note, functions used to fit with likelihood and Bayes may or may not behave well when fed NAs. So look out for those errors.*
 
 ###Least Squares Workflow
+
 ```{r Least Squares Method}
 ####Fit the Model####
 Morph_lm <- lm(Culmen ~ Tarsus, data = Morphology)
@@ -380,6 +383,7 @@ knitr::kable(tidy(glm(Culmen ~ Tarsus, data = Morphology)), "html",
 #Bayes
 knitr::kable(tidy(morph_brms, intervals = TRUE), "html", digits = 2)
 ```
+
 Our three types of analyses use different methods to investigate the same relationship between Tarsus (leg) length and Culmen (upper beak) length. 
 Least Squares is a frequentist approach with the goal of describing the probability of obtaining the relationship we see in our data. In this mindset we used our test statistics to reject the null hypothesis that Culmen length does not effect Tarsus length. The caveat to interpreting this kind of result is that our test provides us with a fixed value at which only Tarsus lengths at that size predict the Culmen length.
 
@@ -391,6 +395,8 @@ For all three approaches our measurments of error and confidence are very simila
 
 ##5.3 Every Day I'm Profilin' (10 points)
 *For your likelihood fit, are your profiles well behaved? For just the slope, use grid sampling to create a profile. You’ll need to write functions for this, and use the results from your glm() fit to provide the reasonable bounds of what you should be profiling over (3SE should do). Is it well behaved? Plot the profile and give the 80% and 95% CI. Verify your results with profileModel.*
+
+The profiles are well behaved and converge around the same values. The 80% and 95% CI is represented with orange and red lines on the slope profile graph.
 
 ```{r, echo = FALSE, include = FALSE}
 #Call the glm() to provide reasonable bounds
@@ -460,6 +466,8 @@ plot(prof_glm)
 ##5.4 The Power of the Prior (10 Points)
 *This data set is pretty big. After excluding NAs in the variables we’re interested in, it’s over 766 lines of data! Now, a lot of data can overhwelm a strong prior. But only to a point. Show first that there is enough data here that a prior for the slope with an estimate of 0.4 and a sd of 0.01 is overwhelmed by the data by demonstrating that it produces similar results to our already fit flat prior. Second, see if a very small sample size (n = 10) would at least include 0.4 in it’s 95% Credible Interval. Last, demonstrate at what sample size that 95% CL first begins to include 0.4 when we have a strong prior. How much data do we really need to overcome our prior belief? Note, it takes a long time to fit these models, so, try a strategy of spacing out the 3-4 sample sizes, and then zoom in on an interesting region.*
 
+With a strong prior there is enough data to produce similar results to our already fit flat prior (as seen by the profiled lines overlapping). Without a prior we see 0.4 included quickly, around 11. But when the priors are adeed we need a very large sample size to get to a point where 0.4 is included. I was not able to get the data to match the prior belief but came close around 1,000.
+
 ```{r Summary, echo = FALSE, include = FALSE}
 #Use priors in our model
 morph_prior <- brm(Culmen ~ Tarsus,
@@ -467,6 +475,9 @@ morph_prior <- brm(Culmen ~ Tarsus,
                    family = gaussian(),
                  prior = c(prior(normal(0.4, 0.4), class = b),
                            prior(normal(0.01, 0.01), class = sigma)))
+```
+
+```{r Compare Results}
 ####Compare Results####
 posterior_interval(morph_brms)
 posterior_interval(morph_prior)
@@ -485,7 +496,7 @@ ggplot(morph_fit, aes(x = Tarsus, y = Culmen)) +
   scale_fill_brewer(palette = "Greys") +
   scale_color_brewer(palette = "Set2") +
   stat_lineribbon(data = morph_fit_prior, color = "blue",
-                  mapping = aes(y = .value)) +
+                  mapping = aes(y = .value)) + #Note: if you take the blue line out you can see the other line.
   theme_bw(base_size = 17)
 #They are so close that they overlap eachother! To me this means it's validated.
 ```
@@ -529,12 +540,19 @@ sample_size_200 <-  brm(Culmen ~ Tarsus,
 posterior_interval(sample_size_200)
 
 
-random_data_250 <- Morphology[1:250,]
-sample_size_250 <- brm(Culmen ~ Tarsus,
-                       data = random_data_250,
+random_data_1000 <- Morphology[1:100,]
+sample_size_1000 <- brm(Culmen ~ Tarsus,
+                       data = random_data_1000,
                        family = gaussian(),
                        prior = c(prior(normal(0.4, 0.4), class = b),
                        prior(normal(0.01, 0.01), class = sigma)))
 
-posterior_interval(sample_size_250)
+posterior_interval(sample_size_1000)
+```
+
+```{r}
+posterior_interval(sample_size_20)
+posterior_interval(sample_size_100)
+posterior_interval(sample_size_200)
+posterior_interval(sample_size_1000)
 ```
